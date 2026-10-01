@@ -38,8 +38,36 @@ function ownedByOmarchy(item, layout) {
     || (layoutHasWidget(layout, "omarchy.dropbox") && itemNamed(item, "dropbox"))
 }
 
+function listHas(value, key) {
+  if (!Array.isArray(value)) return false
+  for (var i = 0; i < value.length; i++) {
+    if (String(value[i]) === key) return true
+  }
+  return false
+}
+
+function classify(id, settings) {
+  var key = String(id || "")
+  var values = settings || {}
+  if (listHas(values.hidden, key)) return "hidden"
+  if (values.drawer === false || listHas(values.pinned, key)) return "pinned"
+  return "drawer"
+}
+
+// The entry the tray saves after a pin or hide. Saving replaces the whole
+// layout entry, so every other setting on it is carried over.
+function withItemLists(settings, pinned, hidden) {
+  var next = {}
+  for (var key in settings || {}) next[key] = settings[key]
+  next.pinned = pinned
+  next.hidden = hidden
+  return next
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    classify: classify,
+    withItemLists: withItemLists,
     itemNamed: itemNamed,
     entryId: entryId,
     layoutHasWidget: layoutHasWidget,

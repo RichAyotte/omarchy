@@ -153,10 +153,7 @@ BarWidget {
   }
 
   function classifyItem(item) {
-    var iid = String(item.id || "")
-    if (hiddenIds.indexOf(iid) !== -1) return "hidden"
-    if (pinnedIds.indexOf(iid) !== -1) return "pinned"
-    return "drawer"
+    return TrayModel.classify(item.id, settings)
   }
 
   function ownedByOmarchy(item) {
@@ -183,7 +180,7 @@ BarWidget {
   function persistTrayState(pinned, hidden) {
     if (!root.bar || !root.bar.shell || typeof root.bar.shell.updateEntryInline !== "function") return
     var id = root.moduleName || "omarchy.tray"
-    root.bar.shell.updateEntryInline(id, { id: id, pinned: pinned, hidden: hidden })
+    root.bar.shell.updateEntryInline(id, TrayModel.withItemLists(settings, pinned, hidden))
   }
 
   function togglePin(iid) {
