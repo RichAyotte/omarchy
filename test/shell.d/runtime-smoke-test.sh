@@ -331,6 +331,14 @@ esac
 SH
 chmod +x "$stub_bin/curl"
 
+# The default layout plus one command entry, which the bar builds from its own
+# component rather than from the widget registry.
+command_entry_id="smoke.command"
+mkdir -p "$test_home/.config/omarchy"
+jq --arg id "$command_entry_id" \
+  '.bar.layout.right += [{"id": $id, "exec": "echo smoke", "interval": 60}]' \
+  "$ROOT/config/omarchy/shell.json" >"$test_home/.config/omarchy/shell.json"
+
 OMARCHY_PATH="$test_root" \
 HOME="$test_home" \
 XDG_CONFIG_HOME="$test_home/.config" \
@@ -525,6 +533,18 @@ jq -e --argjson expected "$default_ids" --argjson visibleExpected "$visible_defa
   fail_with_log "default bar layout renders expected module slots"
 }
 pass "default bar layout renders expected module slots"
+
+jq -e --arg id "$command_entry_id" 'any(.[]; .id == $id and .visible == true and .width > 0)' \
+  <<<"$geometry" >/dev/null || {
+  printf 'Geometry:\n' >&2
+  jq . <<<"$geometry" >&2
+  fail_with_log "bar renders a command entry"
+}
+if grep -q 'Cannot assign to read-only property' "$log"; then
+  grep 'Cannot assign to read-only property' "$log" | sed 's/^/  /' | head -5 >&2
+  fail_with_log "bar loads a command entry without writing to its read-only properties"
+fi
+pass "bar loads a command entry without writing to its read-only properties"
 
 jq -e '
   map(select(.section == "center")) | map(.id) as $center |

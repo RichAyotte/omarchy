@@ -1779,7 +1779,9 @@ Item {
     readonly property var moduleSettings: root.entrySettings(entry)
     readonly property string customType: root.customModuleType(entry)
     readonly property var registryMetadata: root.barWidgetRegistry.metadataFor(root.canonicalWidgetId(moduleName))
-    readonly property bool firstParty: registryMetadata && registryMetadata.firstParty === true
+    // CustomCommandModule is this file's own component, so it gets the bar
+    // itself rather than the facade a plugin's widget gets.
+    readonly property bool firstParty: commandCustom || (registryMetadata && registryMetadata.firstParty === true)
     readonly property string pluginApiId: registered ? root.canonicalWidgetId(moduleName) : "bar-entry:" + moduleName
     // Re-evaluate when the registry mutates (Component reference changes,
     // plugin enabled/disabled, etc.). Reading the `widgets` property creates
@@ -2007,16 +2009,15 @@ Item {
 
     Component {
       id: customCommandModuleComponent
-      CustomCommandModule { entry: slot.entry }
+      CustomCommandModule {}
     }
   }
 
   component CustomCommandModule: WidgetButton {
     id: customRoot
 
-    required property var entry
-    readonly property string moduleName: root.entryId(entry)
-    readonly property var settings: root.entrySettings(entry)
+    property string moduleName: ""
+    property var settings: null
     property string outputText: ""
     property string outputTooltip: ""
     property bool outputActive: false
@@ -2035,7 +2036,6 @@ Item {
       outputActive = klass === "active" || (Array.isArray(klass) && klass.indexOf("active") !== -1)
     }
 
-    bar: root
     text: outputText || String(setting("text", ""))
     tooltipText: outputTooltip || String(setting("tooltip", ""))
     active: outputActive
