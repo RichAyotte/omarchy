@@ -23,6 +23,14 @@ ShellRoot {
   // lifted while it is not was lifted by the startup deadline instead.
   Connections {
     target: intro
+    // BackgroundIntro lifts the cover in its own handler for this change, so
+    // once every handler has run a cover still up was left to the deadline.
+    function onBackgroundReadyChanged() {
+      if (!intro.backgroundReady) return
+      Qt.callLater(function() {
+        test.check(!intro.cover, "the layer becoming ready releases the startup cover")
+      })
+    }
     function onCoverChanged() {
       if (intro.cover) return
       test.check(background.ready && background.displayedBackground === "", "the desktop is released once the layer settles on no wallpaper")
@@ -41,7 +49,7 @@ ShellRoot {
     interval: 12000
     running: true
     onTriggered: {
-      test.check(false, "a desktop without a wallpaper fades in before the startup deadline")
+      test.check(false, "a desktop without a wallpaper is revealed")
       Qt.quit()
     }
   }
