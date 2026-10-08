@@ -45,8 +45,12 @@ Item {
   property string pendingColorsRaw: ""
   property string pendingShellRaw: ""
   property real revealProgress: 1
+  // Set once the layer has settled on no wallpaper. That is ready at once,
+  // since Hyprland's own fill is what shows, but it differs from the empty
+  // state before the first link read, which is not ready.
+  property bool cleared: false
   readonly property bool ready: {
-    if (isVideo(displayedBackground)) return true
+    if (cleared || isVideo(displayedBackground)) return true
     if (backgrounds.instances.length === 0) return false
     for (var panel of backgrounds.instances) {
       if (!panel.backgroundReady) return false
@@ -92,6 +96,7 @@ Item {
     finishingTransition = false
     backgroundVersion += 1
     revealProgress = 1
+    cleared = true
   }
 
   function setBackground(path, instant) {
@@ -112,6 +117,7 @@ Item {
     requestNativeSize(fromPath || displayedBackground)
     requestNativeSize(finalPath)
     currentBackground = finalPath
+    cleared = false
     backgroundVersion += 1
     revealStartedVersion = -1
 
