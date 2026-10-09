@@ -60,9 +60,14 @@ ShellRoot {
       if (intro.cover) return
       test.check(background.ready && background.displayedBackground === "", "the desktop is released once the layer settles on no wallpaper")
     }
+    // checkRelease() sets releaseChecked only once intro.backgroundReady and
+    // intro.startupSettled both hold. The fade follows the cover lifting, so
+    // releaseChecked is still false here only if one of them never landed and
+    // BackgroundIntro's 10 s startup Timer lifted the cover instead.
     function onStartupPendingChanged() {
       if (intro.startupPending) return
-      test.check(!intro.cover && intro.startupOpacity === 0, "a desktop without a wallpaper fades in before the startup deadline")
+      test.check(test.releaseChecked, "the layer is ready and the boot intro has exited before the desktop fades in")
+      test.check(!intro.cover && intro.startupOpacity === 0, "a desktop without a wallpaper fades in")
       if (!test.failed) console.log("RESULT pass")
       Qt.quit()
     }
